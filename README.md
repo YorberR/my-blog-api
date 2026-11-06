@@ -31,6 +31,25 @@
 $ pnpm install
 ```
 
+## PostgreSQL
+
+Create a local environment file and start PostgreSQL with pgAdmin:
+
+```powershell
+Copy-Item .env.example .env
+# Fill in the blank credential values in .env before starting the services.
+docker compose up -d
+```
+
+Set your own PostgreSQL and pgAdmin credentials in `.env`. This file is ignored
+by Git; do not commit it. The NestJS app connects to PostgreSQL on
+`localhost:5432` by default. Start it with `pnpm run start:dev`.
+
+Open pgAdmin at [http://localhost:5050](http://localhost:5050) and sign in with
+`PGADMIN_DEFAULT_EMAIL` and `PGADMIN_DEFAULT_PASSWORD` from `.env`. Register a
+server with host `postgres`, port `5432`, and `DB_USER`, `DB_PASSWORD`, and
+`DB_NAME` from `.env`.
+
 ## Compile and run the project
 
 ```bash
