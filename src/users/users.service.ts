@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto } from './dtos/user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entitites/user.entity';
@@ -12,7 +12,9 @@ export class UsersService {
   ) {}
 
   async findAll() {
-    const users = await this.usersRepository.find();
+    const users = await this.usersRepository.find({
+      relations: ['profile'],
+    });
     return users;
   }
 
@@ -25,26 +27,41 @@ export class UsersService {
   }
 
   async create(body: CreateUserDto) {
-    const newUser = await this.usersRepository.save(body);
-    return newUser;
+    try {
+      const newUser = await this.usersRepository.save(body);
+      return newUser;
+    } catch {
+      throw new NotFoundException(`Error creating user`);
+    }
   }
 
   async delete(id: number) {
-    const user = await this.findOne(id);
-    await this.usersRepository.delete(user.id);
-    return {
-      message: `User with id ${id} deleted`,
-    };
+    try {
+      await this.usersRepository.delete(id);
+      return {
+        message: `User with id ${id} deleted`,
+      };
+    } catch {
+      throw new NotFoundException(`Error deleting user with id ${id}`);
+    }
   }
 
   async update(id: number, changes: UpdateUserDto) {
-    const user = await this.findOne(id);
-    const updatedUser = this.usersRepository.merge(user, changes);
-    return this.usersRepository.save(updatedUser);
+    try {
+      const user = await this.findOne(id);
+      const updatedUser = this.usersRepository.merge(user, changes);
+      const saveUser = await this.usersRepository.save(updatedUser);
+      return saveUser;
+    } catch {
+      throw new NotFoundException(`Error updating user with id ${id}`);
+    }
   }
 
   private async findOne(id: number) {
-    const user = await this.usersRepository.findOneBy({ id });
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['profile'],
+    });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
