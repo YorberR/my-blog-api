@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto } from './dtos/user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entitites/user.entity';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -13,7 +13,9 @@ export class UsersService {
 
   async findAll() {
     const users = await this.usersRepository.find({
-      relations: ['profile'],
+      relations: {
+        profile: true,
+      },
     });
     return users;
   }
@@ -21,9 +23,17 @@ export class UsersService {
   async getUserById(id: number) {
     const user = await this.findOne(id);
     if (!user) {
-      throw new NotFoundException(`User with id ${id} not found`);
+      throw new ForbiddenException(`User with id ${id} not found`);
     }
     return user;
+  }
+
+  async getProfileByUserId(id: number) {
+    const user = await this.findOne(id);
+    if (!user.profile) {
+      throw new NotFoundException(`Profile for user with id ${id} not found`);
+    }
+    return user.profile;
   }
 
   async create(body: CreateUserDto) {
@@ -31,7 +41,7 @@ export class UsersService {
       const newUser = await this.usersRepository.save(body);
       return newUser;
     } catch {
-      throw new NotFoundException(`Error creating user`);
+      throw new BadRequestException(`Error creating user`);
     }
   }
 
@@ -42,7 +52,7 @@ export class UsersService {
         message: `User with id ${id} deleted`,
       };
     } catch {
-      throw new NotFoundException(`Error deleting user with id ${id}`);
+      throw new BadRequestException(`Error deleting user with id ${id}`);
     }
   }
 
@@ -53,14 +63,16 @@ export class UsersService {
       const saveUser = await this.usersRepository.save(updatedUser);
       return saveUser;
     } catch {
-      throw new NotFoundException(`Error updating user with id ${id}`);
+      throw new BadRequestException(`Error updating user with id ${id}`);
     }
   }
 
   private async findOne(id: number) {
     const user = await this.usersRepository.findOne({
       where: { id },
-      relations: ['profile'],
+      relations: {
+        profile: true,
+      },
     });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
