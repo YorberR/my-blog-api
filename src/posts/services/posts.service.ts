@@ -17,6 +17,7 @@ export class PostsService {
       const newPost = await this.postsRepository.save({
         ...body,
         user: { id: body.UserId },
+        categories: body.categoryIds?.map((id) => ({ id })),
       });
       return this.findOne(newPost.id);
     } catch {
@@ -26,14 +27,14 @@ export class PostsService {
 
   async findAll() {
     return this.postsRepository.find({
-      relations: { user: { profile: true } },
+      relations: { user: { profile: true }, categories: true },
     });
   }
 
   async findOne(id: number) {
     const post = await this.postsRepository.findOne({
       where: { id },
-      relations: { user: { profile: true } },
+      relations: { user: { profile: true }, categories: true },
     });
 
     if (!post) {
@@ -62,5 +63,13 @@ export class PostsService {
     } catch {
       throw new BadRequestException(`Error deleting post with id ${id}`);
     }
+  }
+
+  async getPostsByCategoryId(categoryId: number) {
+    const posts = await this.postsRepository.find({
+      where: { categories: { id: categoryId } },
+      relations: { user: { profile: true } },
+    });
+    return posts;
   }
 }
