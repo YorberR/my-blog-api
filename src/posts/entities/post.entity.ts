@@ -1,10 +1,12 @@
 import { Column, Entity, CreateDateColumn, UpdateDateColumn, PrimaryGeneratedColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 
 import { User } from '../../users/entities/user.entity';
 import { Category } from './category.entity';
 
 @Entity()
 export class Post {
+  @ApiProperty({ description: 'The id of the post' })
   @PrimaryGeneratedColumn()
   id: number;
 
